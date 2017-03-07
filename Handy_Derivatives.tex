@@ -1,0 +1,343 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{mathtools}
+
+\begin{document}
+
+\title{Handy DL}
+\author{Konopczynski}
+
+\maketitle
+
+
+
+% TBD:
+% backprop for some stuff and examples
+% normalization
+% SVM loss
+% conv layer
+% up conv layer
+% deconv 
+
+
+
+\begin{abstract}
+Extended calculations and derivatives used in DL in order to make them easier to follow.
+\end{abstract}
+
+
+
+
+\section{Activation functions}
+These functions are used at the end of a layer, usually on outputs of an affine function introducing non-linearity to the equatinon. They are applied on an input vector $o_k$ and produce an output vector of activations $p_k$.
+
+\subsection{Sigmoid}
+Not centered, values range is $(0,1)$.
+
+It is defines as:
+\begin{equation}
+     \label{25}
+f(x) = \frac{1}{1+e^{-x}}
+\end{equation}
+and it's derivative is:
+\begin{equation}
+     \label{25}
+f'(x) = f(x)(1-f(x))
+\end{equation}
+
+\subsection{Tanh}
+Centered, values range is $(-1,1)$.
+
+It is defines as:
+\begin{equation}
+     \label{25}
+f(x) = tanh(x) = \frac{2}{1+e^{-2x}} -1
+\end{equation}
+and it's derivative is:
+\begin{equation}
+     \label{25}
+f'(x) = 1 - f(x)^2
+\end{equation}
+
+
+
+
+
+
+
+
+\subsection{ReLU}
+Nice and easy, but kills the gradient if $x<0$. The values range is $(0,+ \infty)$
+
+It is defines as:
+\begin{equation}
+     \label{25}
+	f(x)= 
+	\begin{dcases}
+    	0 & \text{ for } x < 0 \\
+    	x & \text{ for } x \geq 0
+	\end{dcases}
+\end{equation}
+and it's derivative is:
+\begin{equation}
+     \label{25}
+	f'(x)= 
+	\begin{dcases}
+    	0 & \text{ for } x < 0 \\
+    	1 & \text{ for } x \geq 0
+	\end{dcases}
+\end{equation}
+\subsection{Parametric and leaky ReLU}
+same as ReLU but with some parameter $\alpha$ instead of 0, when $x<0$. For Leaky ReLU the $\alpha$ is equal some small value. e.g. $\alpha=0.01$. The values range is $(- \infty,+ \infty)$
+
+It is defines as:
+\begin{equation}
+     \label{25}
+	f(\alpha, x)= 
+	\begin{dcases}
+    	\alpha x & \text{ for } x < 0 \\
+    	x & \text{ for } x \geq 0
+	\end{dcases}
+\end{equation}
+and it's derivative is:
+\begin{equation}
+     \label{25}
+	f'(\alpha, x)= 
+	\begin{dcases}
+    	\alpha & \text{ for } x < 0 \\
+    	1 & \text{ for } x \geq 0
+	\end{dcases}
+\end{equation}
+
+
+
+\subsection{Softmax}
+The softmax function is often used at the end of the network together with cross entropy forming the Cross-entropy Loss for categorical loss. The softmax function is defined as:
+\begin{equation}
+    \label{1}
+    p_i = \frac{e^{o_i}}{\sum_{k=1}^{N} e^{o_k}}, \forall k = \{1, ..., N\}
+\end{equation}
+where $N$ is the total number of classes, and $o_k$ is the outcome for the class $k$. The softmax computes normalized probability $p_i$ for the class $i$ within a range from 0 to 1.
+
+To compute the derivatives of the softmax one should use the quotient rule
+\begin{equation}
+    \label{2}
+    f(x) = \frac{g(x)}{h(x)} \rightarrow f'(x)= \frac{g'(x) h(x) - g(x) h'(x)}{(h(x))^2}
+\end{equation}
+Lets subset $\Sigma = {\sum_{k=1}^{N} e^{o_k}}$. Now, using it in the equation:
+\begin{equation}
+    \label{3}
+    \frac{\partial{p_i}}{\partial{o_j}} = \frac{\partial}{\partial{o_j}} (\frac{e^{o_i}}{\sum_{k=1}^{N} e^{o_k}}) = \frac{\partial}{\partial{o_j}} (\frac{e^{o_i}}{\Sigma})
+\end{equation}
+
+\begin{equation}
+    \label{4}
+    \frac{\partial{p_i}}{\partial{o_j}} = \frac{(e^{o_i})' \Sigma - e^{o_i} (\Sigma)'}{\Sigma ^2}
+\end{equation}
+where
+\begin{equation}
+    \label{5}
+    (\Sigma)' = \frac{\partial}{\partial o_j} {\sum_{k=1}^{N} e^{o_k}} = \frac{\partial}{\partial o_j} e^{o_j} + {\sum_{k!=j}^{N} e^{o_k}} = e^{o_j}
+\end{equation}
+
+if $i \neq j$:
+\begin{equation}
+    \label{6}
+    \frac{\partial{p_i}}{\partial{o_j}} = \frac{(e^{o_i})' \Sigma - e^{o_i} (\Sigma)'}{\Sigma ^2} = \frac{ - e^{o_i} (\Sigma)'}{\Sigma^2} = \frac{ - e^{o_i} e^{o_j}}{\Sigma^2} = \frac{- e^{o_i}}{\Sigma} \frac{e^{o_j}}{\Sigma} = -p_i p_j
+\end{equation}
+
+if $i=j$:
+\begin{equation}
+    \label{7}
+\frac{\partial{p_i}}{\partial{o_j}} = \frac{(e^{o_i})' \Sigma - e^{o_i} (\Sigma)'}{\Sigma ^2} = \frac{e^{o_j} \Sigma - e^{o_j} e^{o_j}}{\Sigma ^2} = \frac{e^{o_j}}{\Sigma} \frac{(\Sigma - e^{o_j})}{\Sigma} = p_j(1-p_j)
+\end{equation}
+
+
+
+
+
+
+
+
+
+\section{Loss functions}
+The loss functions are generally divided into classification or regression loss functions. Depending on the task, one should desing his own loss function. For regression these are usually Rigid Regression or LASSO objectives (basically $L_p$ norms). For classification, the most popular is the cross-entropy loss, but one can use something else, e.g. SVM loss.
+
+
+\subsection{Cross-Entropy Loss}
+Cross-entropy loss is defined as
+\begin{equation}
+    \label{8}
+    L = - \sum_{i=1}^{N} y_i  \log{p_i}
+\end{equation}
+where
+\begin{equation}
+    \label{9}
+    p_i = \frac{e^{o_i}}{\sum_{k=1}^{N} e^{o_k}}
+\end{equation}
+is a softmax function. Now, using the chain rule, one can compute the partial derivative:
+
+\begin{equation}
+    \label{10}
+    \frac{\partial{L}}{\partial{o_j}} = \frac{\partial}{\partial{o_j}} (- \sum_{i=1}^{N} y_i  \log{p_i}) = \frac{\partial{p_i}}{\partial{o_j}} \frac{\partial{L}}{\partial{p_i}} 
+\end{equation}
+
+the solution for the first part one can recall from the section 1.1:
+\begin{equation}
+    \label{11}
+	\frac{\partial{p_i}}{\partial{o_j}}= 
+	\begin{dcases}
+    	-p_i p_j, & \text{if } i \neq j\\
+    	 p_j(1-p_j), & \text{if } i = j
+	\end{dcases}
+\end{equation}
+
+The second part:
+\begin{equation}
+    \label{12}
+\frac{\partial{L}}{\partial{p_j}} = \frac{\partial}{\partial{p_j}} (- \sum_{i=1}^{N} y_i  \log{p_i}) = - \sum_{i=1}^{N} y_i \frac{\partial}{\partial{p_j}} \log{p_i}) =  - \sum_{i=1}^{N} y_i \frac{1}{p_i}
+\end{equation}
+
+Taking it all together:
+\begin{equation}
+    \label{13}
+\frac{\partial{L}}{\partial{p_i}} \frac{\partial{p_i}}{\partial{o_j}}  = - \sum_{i=1}^{N} y_i \frac{1}{p_i} \frac{\partial{p_i}}{\partial{o_j}} = \\
+- y_j \frac{1}{p_j} (p_j(1-p_j)) - \sum_{i \neq j}^{N} y_i \frac{1}{p_i} (-p_i p_j)
+\end{equation}
+
+\begin{equation}
+    \label{14}
+= - y_j (1-p_j) + \sum_{i \neq j}^{N} y_i p_j = -y_j + y_j p_j + \sum_{i \neq j}^{N} y_i p_j = - y_j + \sum_{i =1 }^{N} y_i p_j = p_j - p_i
+\end{equation}
+since $\sum_{i =1 }^{N} y_i = 1$, beacause the sum of probabilities should be equal 1.
+
+
+
+\subsection{SVM Loss}
+
+
+\subsection{Squared Norm}
+Squared norm is a squared L2 norm, and is defined as
+\begin{equation}
+    \label{15}
+    L = \frac{1}{N} \sum_{i}^{N} L_i = \frac{1}{N} \sum_{i}^{N} \frac{1}{2} (y_i - p_i)^2
+\end{equation}
+where $p_i$ is the predicted vector, and $y_i$ the vector of true values for $N$ number of classes $i = \{1, ..., N\} $.
+
+The derivative is
+\begin{equation}
+    \label{16}
+    \frac{\partial{L}}{\partial{p_j}} = \frac{1}{N} \sum_{i}^{N} \frac{\partial{L_i}}{\partial{p_j}}
+\end{equation}
+
+Using the chain rule, the derivative
+\begin{equation}
+    \label{17}
+\frac{\partial{L_i}}{\partial{p_j}} = \frac{\partial}{\partial{p_j}} \frac{1}{2} (y_i - p_i)^2 = \frac{\partial{L_i}}{\partial{(y_i - p_i)}} \frac{\partial{(y_i - p_i)}}{\partial{p_j}} = (y_i - p_i) (\frac{\partial}{\partial{p_j}} y_i - \frac{\partial}{\partial{p_j}} p_i)
+\end{equation}
+\begin{equation}
+    \label{18}
+= (y_i - p_i)(0-1) = -(y_i - p_i) = p_i-y_i
+\end{equation}
+
+And summarizing over all the features:
+\begin{equation}
+    \label{19}
+     \frac{\partial{L}}{\partial{p_j}} = \frac{1}{N} \sum_{i}^{N} \frac{\partial{L_i}}{\partial{p_j}}=\frac{1}{N}  \sum_{i}^{N} (p_i-y_i)
+\end{equation}
+
+
+
+\subsection{Lp norm}
+In this subsection, we consider all the $L_p$ norms together with the pseudo norms, even though not all of them are differentiable.
+The $L_p$ norm is defined as
+\begin{equation}
+     \label{20}
+    || \mathbf{x} ||_p = ( \sum_{i=1}^{N} |x_i|^p)^{\frac{1}{p}}  \text{, for } p > 0
+\end{equation}
+
+And the derivative, subseting  $\Sigma = {\sum_{i=1}^{N} |x_i|^p}$ , and using the chain rule is
+\begin{equation}
+     \label{21}
+    \frac{\partial || \mathbf{x} ||_p }{\partial x_j} = \frac{\partial \Sigma ^{\frac{1}{p}}}{\partial \Sigma} \frac{\partial \Sigma}{\partial |x_i|} \frac{\partial |x_i|}{\partial x_j}
+\end{equation}
+
+Calculating the three derivatives, one gets:
+
+\begin{equation}
+     \label{22}
+ \frac{\partial \Sigma ^{\frac{1}{p}}}{\partial \Sigma} = \frac{1}{p} \Sigma ^{\frac{1}{p}-1} = \frac{1}{p} (\Sigma ^{\frac{1}{p}})^{1-p} =  \frac{1}{p} (|| \mathbf{x} ||_p)^{1-p}
+\end{equation}
+
+\begin{equation}
+     \label{23}
+\frac{\partial \Sigma}{\partial |x_i|} = \frac{\partial}{\partial |x_i|} {\sum_{i=1}^{N} |x_i|^p} = p {\sum_{i=1}^{N} |x_i|^{p-1}}
+\end{equation}
+
+\begin{equation}
+     \label{24}
+\frac{\partial |x_i|}{\partial x_j} = \delta _{ij} \frac{x_i}{|x_i|} \text{, for } x_i \neq 0 
+\end{equation}
+where $\delta _{ij}$ is the Kronecker delta. Notice, it's not defined at $x_i=0$.
+
+Getting it all together:
+\begin{equation}
+     \label{25}
+\frac{\partial || \mathbf{x} ||_p }{\partial x_j} = \frac{1}{p} (|| \mathbf{x} ||_p)^{1-p} p {\sum_{i=1}^{N} |x_i|^{p-1}} \delta _{ij} \frac{x_i}{ |x_i|} = || \mathbf{x} ||_p^{1-p}  |x_j|^{p-1} \frac{x_j}{|x_j|}  
+\end{equation}
+
+\begin{equation}
+     \label{25}
+= \frac{x_j |x_j|^{p-2}}{|| \mathbf{x} ||_p^{p-1}}    \text{, for } p > 0 \text{, and } x_i \neq 0 
+\end{equation}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Affine functions}
+
+\subsection{Fully conected layer}
+Fully conected layer is basically a matrix multiplication of an input vector with a matrix of trainable weights.
+
+\begin{equation}
+     \label{25}
+o_{i}=w_{i}^T x \rightarrow  o=w^T x
+\end{equation}
+
+where $o \in \rm I\!R ^N$ is an output vector of some length $N$, $x \in \rm I\!R ^M $ an input vector of some length $M$ and $w \in \rm I\!R ^{M \times N}$ the weigth matrix of a shape $M \times N$ with parameters to learn.
+
+The derivatives are simply:
+\begin{equation}
+     \label{25}
+\frac{\partial o_i }{\partial w_i} = x  \rightarrow \frac{\partial o }{\partial w} = x
+\end{equation}
+and
+\begin{equation}
+     \label{25}
+\frac{\partial o_i }{\partial x} = w_i  \rightarrow \frac{\partial o }{\partial x} = w
+\end{equation}
+
+
+\section{Misc and Normalization}
+
+
+\end{document}
